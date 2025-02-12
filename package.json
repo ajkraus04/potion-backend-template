@@ -4,7 +4,7 @@
   "dependencies": {
     "@solana/web3.js": "^1.98.0",
     "axios": "^1.6.8",
-    "dotenv": "^16.4.1",
+    "dotenv": "^16.4.7",
     "joi": "^17.13.3",
     "lodash": "^4.17.21",
     "moment": "^2.30.1",
