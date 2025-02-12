@@ -139,103 +139,68 @@ async function processTransactions(txs, wallet, solPrice) {
 async function parsePumpFunSwap(transaction, trades, solPriceUSD, wallet) {
   const tokenTransfers = transaction.transaction.tokenTransfers || [];
   const nativeTransfers = transaction.transaction.nativeTransfers || [];
-  const timestamp = transaction.transaction.timestamp;
+  const timestamp = new Date(transaction.blockTime * 1000).toISOString();
 
-  let tokenAddress = "";
-  let tokenName = "";
-  let firstTrade = timestamp;
-  let lastTrade = timestamp;
+  if (tokenTransfers.length < 1) return;
+
+  const tokenAddress = tokenTransfers[0].mint;
+  const tokenName = await dexscreener.getTokenName(tokenAddress);
+
   let buys = 0;
   let sells = 0;
-  let investedSol = 0;
-  let realizedPnl = 0;
-
-  // Identify token and track first/last trade timestamps
-  if (tokenTransfers.length < 1) {
-    return;
-  }
-
-  tokenAddress = tokenTransfers[0].mint;
-  tokenName = await dexscreener.getTokenName(tokenAddress);
-
-  // Track buys and sells
   tokenTransfers.forEach((transfer) => {
-    if (transfer.toUserAccount === wallet) {
-      buys++;
-    } else if (transfer.fromUserAccount === wallet) {
-      sells++;
-    }
+    if (transfer.toUserAccount === wallet) buys++;
+    if (transfer.fromUserAccount === wallet) sells++;
   });
 
-  // Track SOL investment and potential profits
-  nativeTransfers.forEach((transfer) => {
-    if (tokenTransfers[0].fromUserAccount === transfer.toUserAccount) {
-      if (buys > 0) {
-        // Only track investment on buys
-        investedSol += transfer.amount;
-      } else if (sells > 0) {
-        // Calculate realized PNL on sells
-        realizedPnl += transfer.amount;
-      }
-    }
-  });
+  const relevantTransfer = _.maxBy(nativeTransfers, "amount");
+  if (!relevantTransfer) return;
 
-  if (investedSol < 0) {
-    return;
-  }
-
-  // Calculate ROI only on sells
-  const roi =
-    sells > 0 && investedSol > 0
-      ? ((realizedPnl - investedSol) / investedSol) * 100
-      : 0;
+  const solAmount = relevantTransfer.amount / 1e9;
 
   if (!trades[tokenAddress]) {
     trades[tokenAddress] = {
       token_name: tokenName,
       token_address: tokenAddress,
-      first_trade: new Date(firstTrade * 1000).toISOString(),
-      last_trade: new Date(lastTrade * 1000).toISOString(),
-      buys,
-      sells,
-      invested_sol: investedSol / 1e9,
-      invested_sol_usd: (investedSol / 1e9) * solPriceUSD,
-      realized_pnl: 0,
-      realized_pnl_usd: 0,
+      first_trade: timestamp,
+      last_trade: timestamp,
+      buys: buys,
+      sells: sells,
+      invested_sol: buys > 0 ? solAmount : 0,
+      invested_sol_usd: buys > 0 ? solAmount * solPriceUSD : 0,
+      realized_pnl: sells > 0 ? solAmount : 0,
+      realized_pnl_usd: sells > 0 ? solAmount * solPriceUSD : 0,
       roi: 0,
     };
   } else {
     trades[tokenAddress].buys += buys;
     trades[tokenAddress].sells += sells;
-    trades[tokenAddress].invested_sol += investedSol / 1e9;
-    trades[tokenAddress].invested_sol_usd =
-      trades[tokenAddress].invested_sol * solPriceUSD;
+
+    if (buys > 0) {
+      trades[tokenAddress].invested_sol += solAmount;
+      trades[tokenAddress].invested_sol_usd =
+        trades[tokenAddress].invested_sol * solPriceUSD;
+    }
 
     if (sells > 0) {
-      trades[tokenAddress].realized_pnl += realizedPnl / 1e9;
+      trades[tokenAddress].realized_pnl += solAmount;
       trades[tokenAddress].realized_pnl_usd =
         trades[tokenAddress].realized_pnl * solPriceUSD;
-      trades[tokenAddress].roi =
-        (trades[tokenAddress].realized_pnl /
-          trades[tokenAddress].invested_sol) *
-        100;
+
+      if (trades[tokenAddress].invested_sol > 0) {
+        trades[tokenAddress].roi = (
+          (trades[tokenAddress].realized_pnl /
+            trades[tokenAddress].invested_sol) *
+          100
+        ).toFixed(2);
+      }
     }
 
-    if (
-      firstTrade <
-      new Date(trades[tokenAddress].first_trade).getTime() / 1000
-    ) {
-      trades[tokenAddress].first_trade = new Date(
-        firstTrade * 1000
-      ).toISOString();
+    if (timestamp < trades[tokenAddress].first_trade) {
+      trades[tokenAddress].first_trade = timestamp;
     }
-    if (
-      lastTrade >
-      new Date(trades[tokenAddress].last_trade).getTime() / 1000
-    ) {
-      trades[tokenAddress].last_trade = new Date(
-        lastTrade * 1000
-      ).toISOString();
+    if (timestamp > trades[tokenAddress].last_trade) {
+      trades[tokenAddress].last_trade = timestamp;
     }
   }
 }
