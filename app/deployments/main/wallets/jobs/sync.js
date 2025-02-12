@@ -11,11 +11,12 @@ const config = {
   connectToDatabase: true,
 };
 
-const handler = getApp(async () => {
-  const dexscreener = new Dexscreener();
-  const birdeye = new Birdeye(process.env.BIRDEYE_API_KEY);
-  const heliusRpc = new HeliusRpc();
+// Initialize services
+const dexscreener = new Dexscreener();
+const birdeye = new Birdeye(process.env.BIRDEYE_API_KEY);
+const heliusRpc = new HeliusRpc();
 
+const handler = getApp(async () => {
   for (const wallet of WALLETS) {
     const txs = await heliusRpc.getTransactionDetails(wallet);
     console.log(txs.length);
