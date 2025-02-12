@@ -1,6 +1,7 @@
 import "dotenv/config";
 
-const API_KEY = process.env.BIRDEYE_API_KEY;
+// Normally go in .env
+const API_KEY = "";
 
 class Birdeye {
   baseUrl = "https://public-api.birdeye.so";
@@ -8,7 +9,6 @@ class Birdeye {
   constructor() {}
 
   async getTokenPrice(address) {
-    console.log(address);
     const response = await fetch(
       `${this.baseUrl}/defi/price?address=${address}`,
       {

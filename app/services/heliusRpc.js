@@ -1,8 +1,8 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { writeFileSync } from "fs";
 
-const API_KEY = process.env.HELIUS_API_KEY;
-console.log(API_KEY);
+// Normally go in .env
+const API_KEY = "";
 
 // Helius RPC URL
 const RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${API_KEY}`;
@@ -36,7 +36,7 @@ class HeliusRpc {
       }
 
       before = oldestTx.signature;
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
     }
 
     const recentTxs = allSignatures.filter(
@@ -110,18 +110,15 @@ class HeliusRpc {
       const filteredBatchResults = batchResults
         .flat()
         .filter(
-          (tx) => tx.transaction !== null && tx.transaction.type === "SWAP"
+          (tx) =>
+            tx.transaction !== null &&
+            (tx.transaction.type === "SWAP" ||
+              tx.transaction.source === "PUMP_FUN")
         );
 
       results.push(...filteredBatchResults);
 
-      // Write current batch to file
-      if (filteredBatchResults.length > 0) {
-        const filename = `transactions_${walletAddress}_batch_${i}.json`;
-        writeFileSync(filename, JSON.stringify(filteredBatchResults, null, 2));
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
 
     return results.filter(
