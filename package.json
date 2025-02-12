@@ -1,5 +1,6 @@
 {
   "name": "potion-backend-template",
+  "type": "module",
   "version": "1.69",
   "dependencies": {
     "@solana/web3.js": "^1.98.0",

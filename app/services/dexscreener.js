@@ -21,19 +21,23 @@ class Dexscreener {
   }
 
   async getTokenName(address) {
-    const response = await this.fetchWithRetry(
-      `${this.baseUrl}/tokens/v1/solana/${address}`
-    );
-    const data = await response.json();
+    try {
+      const response = await this.fetchWithRetry(
+        `${this.baseUrl}/tokens/v1/solana/${address}`
+      );
+      const data = await response.json();
 
-    if (!data.length) {
+      if (!data.length) {
+        return null;
+      }
+
+      if (data[0].baseToken) {
+        return data[0].baseToken.name;
+      }
+      return null;
+    } catch (error) {
       return null;
     }
-
-    if (data[0].baseToken) {
-      return data[0].baseToken.name;
-    }
-    return null;
   }
 }
 
