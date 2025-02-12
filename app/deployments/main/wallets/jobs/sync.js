@@ -6,6 +6,7 @@ import { Dexscreener } from "../../../../services/dexscreener.js";
 import { Birdeye } from "../../../../services/birdeye.js";
 import { HeliusRpc } from "../../../../services/heliusRpc.js";
 import { writeFileSync } from "fs";
+import * as Trades from "../../../../models/trades.js";
 
 const config = {
   type: parameterTypes.none,
@@ -21,6 +22,7 @@ const birdeye = new Birdeye(process.env.BIRDEYE_API_KEY);
 const heliusRpc = new HeliusRpc();
 
 const handler = getApp(async () => {
+  const solPrice = await birdeye.getTokenPrice(SOL_MINT_ADDRESS);
   for (const wallet of WALLETS) {
     // const txs = await heliusRpc.getTransactionDetails(wallet);
 
@@ -36,12 +38,31 @@ const handler = getApp(async () => {
     const txs = JSON.parse(readFileSync(`transactions_${wallet}.json`));
     console.log("Processing", wallet, "with", txs.length, "transactions");
 
-    const solPrice = await birdeye.getTokenPrice(SOL_MINT_ADDRESS);
-
     const trades = await processTransactions(txs, wallet, solPrice);
 
     // Write trades per wallet to json file
-    fs.writeFileSync(`trades_${wallet}.json`, JSON.stringify(trades, null, 2));
+    for (const [key, value] of Object.entries(trades)) {
+      const id = `${wallet}|${key}`;
+
+      const existingTrade = await Trades.read(id);
+      console.log(existingTrade);
+      if (existingTrade) {
+        await Trades.update(id, { wallet, ...value });
+      } else {
+        await Trades.create({
+          id,
+          wallet,
+          ...value,
+        });
+      }
+    }
+    console.log(
+      "Processed",
+      wallet,
+      "with",
+      Object.keys(trades).length,
+      "trades"
+    );
   }
 }, config);
 
