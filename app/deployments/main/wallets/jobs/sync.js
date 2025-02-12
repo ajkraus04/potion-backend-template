@@ -34,7 +34,7 @@ const handler = getApp(async () => {
 
     const trades = await processTransactions(txs, wallet, solPrice);
 
-    // Write trades per wallet to json file
+    // Write trades per wallet to DB
     for (const [key, value] of Object.entries(trades)) {
       const id = `${wallet}|${key}`;
 
