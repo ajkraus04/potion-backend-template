@@ -1,17 +1,22 @@
 import postgres from "postgres";
 
 import { POSTGRES } from "../constants.js";
+console.log(POSTGRES);
 
 let sql = null;
 
 const startConnection = async () => {
   if (sql == null) {
+    // Hardcoded credentials for now
     // @ts-ignore
     sql = postgres(
-      `postgresql://${POSTGRES.postgresUsername}:${POSTGRES.postgresPassword}@${POSTGRES.postgresURL}:${POSTGRES.postgresPort}/${POSTGRES.postgresDatabase}`,
+      `postgresql://postgres:potionalpha@database-2.c5wcq02eu419.us-east-1.rds.amazonaws.com:5432/postgres`,
       {
         prepare: false,
         connect_timeout: 12,
+        ssl: {
+          rejectUnauthorized: false,
+        },
       }
     );
   }
@@ -118,10 +123,23 @@ const endConnection = async () => {
   }
 };
 
+const testConnection = async () => {
+  try {
+    await startConnection();
+    const result = await sql`SELECT 1`;
+    console.log("Database connected successfully!");
+    return true;
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    return false;
+  }
+};
+
 export {
   sql,
   startConnection,
   endConnection,
+  testConnection,
   getOneByID,
   insertOne,
   insertMany,
