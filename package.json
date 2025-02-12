@@ -2,6 +2,7 @@
   "name": "potion-backend-template",
   "version": "1.69",
   "dependencies": {
+    "@solana/web3.js": "^1.98.0",
     "axios": "^1.6.8",
     "dotenv": "^16.4.1",
     "joi": "^17.13.3",
