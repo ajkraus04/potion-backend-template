@@ -33,7 +33,6 @@ functions:
           cors: true
 
 plugins:
-  - serverless-bundle
   - serverless-prune-plugin
 
 custom:

@@ -3,13 +3,11 @@ import "dotenv/config";
 const API_KEY = process.env.BIRDEYE_API_KEY;
 
 class Birdeye {
-  private baseUrl: string = "https://public-api.birdeye.so";
-  private apiKey: string;
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
-  }
+  baseUrl = "https://public-api.birdeye.so";
+  apiKey = API_KEY;
+  constructor() {}
 
-  async getTokenPrice(address: string) {
+  async getTokenPrice(address) {
     console.log(address);
     const response = await fetch(
       `${this.baseUrl}/defi/price?address=${address}`,

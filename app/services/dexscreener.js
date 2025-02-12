@@ -1,8 +1,7 @@
 class Dexscreener {
-  private baseUrl: string = "https://api.dexscreener.com/";
-  constructor() {}
+  baseUrl = "https://api.dexscreener.com/";
 
-  async fetchWithRetry(url: string, options: RequestInit = {}, attempt = 1) {
+  async fetchWithRetry(url, options = {}, attempt = 1) {
     try {
       const response = await fetch(url, options);
       if (response.status === 429 && attempt <= 3) {
@@ -21,7 +20,7 @@ class Dexscreener {
     }
   }
 
-  async getTokenName(address: string) {
+  async getTokenName(address) {
     const response = await this.fetchWithRetry(
       `${this.baseUrl}/tokens/v1/solana/${address}`
     );

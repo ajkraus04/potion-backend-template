@@ -1,30 +1,23 @@
-import { ConfirmedSignatureInfo, Connection, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { writeFileSync } from "fs";
 
 const API_KEY = process.env.HELIUS_API_KEY;
+console.log(API_KEY);
 
 // Helius RPC URL
 const RPC_URL = `https://mainnet.helius-rpc.com/?api-key=${API_KEY}`;
 
-interface TransactionResult {
-  signature: string;
-  blockTime: number | null;
-  transaction: any;
-}
-
 class HeliusRpc {
-  private connection: Connection;
-
   constructor() {
     this.connection = new Connection(RPC_URL);
   }
 
-  private async getConfirmedSignatures(walletAddress: string) {
+  async getConfirmedSignatures(walletAddress) {
     const publicKey = new PublicKey(walletAddress);
     const THIRTY_DAYS_AGO = Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60;
 
-    let allSignatures: ConfirmedSignatureInfo[] = [];
-    let before: string | undefined = undefined;
+    let allSignatures = [];
+    let before = undefined;
 
     while (true) {
       const signatures = await this.connection.getSignaturesForAddress(
@@ -53,14 +46,12 @@ class HeliusRpc {
     return recentTxs;
   }
 
-  public async getTransactionDetails(
-    walletAddress: string
-  ): Promise<TransactionResult[]> {
+  async getTransactionDetails(walletAddress) {
     const signatures = await this.getConfirmedSignatures(walletAddress);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const BATCH_SIZE = 100;
     const CONCURRENT_BATCHES = 2;
-    const results: TransactionResult[] = [];
+    const results = [];
     const parseUrl = `https://api.helius.xyz/v0/transactions/?api-key=${API_KEY}`;
 
     for (
