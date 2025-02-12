@@ -44,11 +44,13 @@ const searchByWallet = async (
 ) => {
   try {
     return await sql`
-            SELECT *
-            FROM ${sql(TABLE_NAME)}
-            WHERE wallet = ${wallet}
-            ORDER BY ${sortBy} ${sortDirection}
-        `;
+      SELECT *
+      FROM ${sql(TABLE_NAME)}
+      WHERE wallet = ${wallet}
+      ORDER BY ${sql`${sortBy}`} ${
+        sortDirection === "DESC" ? sql`DESC` : sql`ASC`
+      }
+    `;
   } catch (e) {
     console.error(e);
     return [];

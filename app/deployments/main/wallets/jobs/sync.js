@@ -45,6 +45,7 @@ const handler = getApp(async () => {
         await Trades.update(id, {
           wallet,
           ...value,
+          created_at: existingTrade.created_at,
         });
       } else {
         await Trades.create({
